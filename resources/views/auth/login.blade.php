@@ -1,47 +1,115 @@
-<x-guest-layout>
-    <!-- Session Status -->
-    <x-auth-session-status class="mb-4" :status="session('status')" />
-
-    <form method="POST" action="{{ route('login') }}">
-        @csrf
-
-        <!-- Email Address -->
-        <div>
-            <x-input-label for="email" :value="__('Email')" />
-            <x-text-input id="email" class="block mt-1 w-full" type="email" name="email" :value="old('email')" required autofocus autocomplete="username" />
-            <x-input-error :messages="$errors->get('email')" class="mt-2" />
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - Kopiku</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Inter', system-ui, sans-serif; }
+        .gradient-text {
+            background: linear-gradient(135deg, #f59e0b 0%, #ef4444 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+    </style>
+</head>
+<body class="min-h-screen bg-gradient-to-br from-orange-50 via-white to-amber-50 flex items-center justify-center p-4">
+    
+    <div class="w-full max-w-md">
+        {{-- Logo --}}
+        <div class="text-center mb-8">
+            <a href="{{ route('order.index') }}" class="inline-flex items-center gap-2">
+                <div class="w-14 h-14 bg-gradient-to-br from-amber-400 to-orange-500 rounded-2xl flex items-center justify-center shadow-xl shadow-orange-200">
+                    <span class="text-white text-2xl">☕</span>
+                </div>
+            </a>
+            <h1 class="text-3xl font-black mt-4 gradient-text">Welcome Back!</h1>
+            <p class="text-gray-500 mt-1">Login dulu biar bisa pesan kopi ☕</p>
         </div>
 
-        <!-- Password -->
-        <div class="mt-4">
-            <x-input-label for="password" :value="__('Password')" />
-
-            <x-text-input id="password" class="block mt-1 w-full"
-                            type="password"
-                            name="password"
-                            required autocomplete="current-password" />
-
-            <x-input-error :messages="$errors->get('password')" class="mt-2" />
-        </div>
-
-        <!-- Remember Me -->
-        <div class="block mt-4">
-            <label for="remember_me" class="inline-flex items-center">
-                <input id="remember_me" type="checkbox" class="rounded dark:bg-gray-900 border-gray-300 dark:border-gray-700 text-indigo-600 shadow-sm focus:ring-indigo-500 dark:focus:ring-indigo-600 dark:focus:ring-offset-gray-800" name="remember">
-                <span class="ms-2 text-sm text-gray-600 dark:text-gray-400">{{ __('Remember me') }}</span>
-            </label>
-        </div>
-
-        <div class="flex items-center justify-end mt-4">
-            @if (Route::has('password.request'))
-                <a class="underline text-sm text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 rounded-md focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 dark:focus:ring-offset-gray-800" href="{{ route('password.request') }}">
-                    {{ __('Forgot your password?') }}
-                </a>
+        {{-- Card --}}
+        <div class="bg-white rounded-3xl shadow-xl shadow-orange-100 border border-gray-100 p-8">
+            
+            {{-- Session Status --}}
+            @if (session('status'))
+                <div class="mb-4 p-4 bg-green-50 border border-green-200 rounded-2xl text-green-700 text-sm">
+                    {{ session('status') }}
+                </div>
             @endif
 
-            <x-primary-button class="ms-3">
-                {{ __('Log in') }}
-            </x-primary-button>
+            <form method="POST" action="{{ route('login') }}" class="space-y-5">
+                @csrf
+
+                {{-- Email --}}
+                <div>
+                    <label for="email" class="block text-sm font-bold text-gray-700 mb-2">Email</label>
+                    <input id="email" type="email" name="email" value="{{ old('email') }}" required autofocus
+                        class="w-full px-4 py-3 border-2 border-gray-200 rounded-2xl focus:border-orange-400 focus:ring-4 focus:ring-orange-100 outline-none transition"
+                        placeholder="email@contoh.com">
+                    @error('email')
+                        <p class="mt-2 text-sm text-red-500">{{ $message }}</p>
+                    @enderror
+                </div>
+
+                {{-- Password --}}
+                <div>
+                    <label for="password" class="block text-sm font-bold text-gray-700 mb-2">Password</label>
+                    <input id="password" type="password" name="password" required
+                        class="w-full px-4 py-3 border-2 border-gray-200 rounded-2xl focus:border-orange-400 focus:ring-4 focus:ring-orange-100 outline-none transition"
+                        placeholder="••••••••">
+                    @error('password')
+                        <p class="mt-2 text-sm text-red-500">{{ $message }}</p>
+                    @enderror
+                </div>
+
+                {{-- Remember & Forgot --}}
+                <div class="flex items-center justify-between">
+                    <label class="flex items-center gap-2 cursor-pointer">
+                        <input type="checkbox" name="remember" 
+                            class="w-5 h-5 rounded-lg border-2 border-gray-300 text-orange-500 focus:ring-orange-400 focus:ring-offset-0">
+                        <span class="text-sm text-gray-600">Ingat saya</span>
+                    </label>
+                    @if (Route::has('password.request'))
+                        <a href="{{ route('password.request') }}" class="text-sm text-orange-500 font-semibold hover:text-orange-600">
+                            Lupa password?
+                        </a>
+                    @endif
+                </div>
+
+                {{-- Submit --}}
+                <button type="submit" 
+                    class="w-full py-4 bg-gradient-to-r from-orange-500 to-amber-500 text-white font-bold text-lg rounded-2xl shadow-xl shadow-orange-200 hover:shadow-orange-300 hover:scale-[1.02] active:scale-[0.98] transition-all">
+                    Masuk 🚀
+                </button>
+            </form>
+
+            {{-- Divider --}}
+            <div class="relative my-6">
+                <div class="absolute inset-0 flex items-center">
+                    <div class="w-full border-t border-gray-200"></div>
+                </div>
+                <div class="relative flex justify-center text-sm">
+                    <span class="px-4 bg-white text-gray-400">atau</span>
+                </div>
+            </div>
+
+            {{-- Register Link --}}
+            <a href="{{ route('register') }}" 
+                class="block w-full py-4 text-center bg-gray-100 text-gray-700 font-bold rounded-2xl hover:bg-gray-200 transition-all">
+                Belum punya akun? Daftar yuk!
+            </a>
         </div>
-    </form>
-</x-guest-layout>
+
+        {{-- Footer --}}
+        <p class="text-center text-gray-400 text-sm mt-6">
+            © {{ date('Y') }} Kopiku. Made with ☕
+        </p>
+    </div>
+
+</body>
+</html>
