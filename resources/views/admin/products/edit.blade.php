@@ -11,8 +11,8 @@
             </svg>
         </a>
         <div>
-            <h1 class="text-2xl font-black text-gray-800">☕ Racik Menu Baru</h1>
-            <p class="text-gray-500 text-sm">Tentukan nama, harga, dan komposisi resep.</p>
+            <h1 class="text-2xl font-black text-gray-800">✏️ Edit Menu</h1>
+            <p class="text-gray-500 text-sm">Ubah data menu <span class="font-semibold">{{ $product->name }}</span></p>
         </div>
     </div>
 
@@ -28,9 +28,10 @@
     @endif
 
     {{-- FORM INPUT --}}
-    <form action="{{ route('admin.products.store') }}" method="POST" enctype="multipart/form-data"
+    <form action="{{ route('admin.products.update', $product->id) }}" method="POST" enctype="multipart/form-data"
         class="grid grid-cols-1 lg:grid-cols-3 gap-8" x-data="recipeApp()">
         @csrf
+        @method('PUT')
 
         {{-- BAGIAN 1: INFO PRODUK --}}
         <div class="lg:col-span-1 space-y-6">
@@ -45,7 +46,7 @@
                         <label class="block text-sm font-bold text-gray-700 mb-2">Nama Menu</label>
                         <input type="text" name="name"
                             class="w-full border border-gray-200 rounded-xl px-4 py-3 focus:ring-2 focus:ring-amber-500 focus:border-amber-500 outline-none transition"
-                            placeholder="Contoh: Kopi Susu Aren" value="{{ old('name') }}" required>
+                            placeholder="Contoh: Kopi Susu Aren" value="{{ old('name', $product->name) }}" required>
                     </div>
 
                     <div>
@@ -54,7 +55,7 @@
                             <span class="absolute left-4 top-3.5 text-gray-400 font-medium">Rp</span>
                             <input type="number" name="price"
                                 class="w-full border border-gray-200 rounded-xl pl-12 pr-4 py-3 focus:ring-2 focus:ring-amber-500 focus:border-amber-500 outline-none transition"
-                                placeholder="25000" value="{{ old('price') }}" required>
+                                placeholder="25000" value="{{ old('price', $product->price) }}" required>
                         </div>
                     </div>
 
@@ -64,7 +65,7 @@
                             class="w-full border border-gray-200 rounded-xl px-4 py-3 bg-white focus:ring-2 focus:ring-amber-500 focus:border-amber-500 outline-none transition">
                             <option value="">-- Tanpa Kategori --</option>
                             @foreach($categories as $category)
-                                <option value="{{ $category->id }}" {{ old('category_id') == $category->id ? 'selected' : '' }}>
+                                <option value="{{ $category->id }}" {{ old('category_id', $product->category_id) == $category->id ? 'selected' : '' }}>
                                     {{ $category->icon }} {{ $category->name }}
                                 </option>
                             @endforeach
@@ -74,9 +75,18 @@
 
                     <div>
                         <label class="block text-sm font-bold text-gray-700 mb-2">Foto Menu</label>
+                        @if($product->image)
+                            <div class="mb-3 relative">
+                                <img src="{{ asset('storage/' . $product->image) }}"
+                                    class="w-full h-32 object-cover rounded-xl border border-gray-200">
+                                <span class="absolute top-2 left-2 bg-black/50 text-white text-xs px-2 py-1 rounded-lg">Foto
+                                    saat ini</span>
+                            </div>
+                        @endif
                         <input type="file" name="image"
                             class="w-full text-sm text-gray-500 file:mr-4 file:py-2.5 file:px-4 file:rounded-xl file:border-0 file:text-sm file:font-bold file:bg-amber-50 file:text-amber-700 hover:file:bg-amber-100 cursor-pointer border border-gray-200 rounded-xl">
-                        <p class="text-xs text-gray-400 mt-2">Format: JPG, PNG. Max: 2MB.</p>
+                        <p class="text-xs text-gray-400 mt-2">Format: JPG, PNG. Max: 2MB. Kosongkan jika tidak ingin
+                            mengubah.</p>
                     </div>
                 </div>
             </div>
@@ -116,7 +126,7 @@
 
                             {{-- Pilih Bahan --}}
                             <div class="col-span-6">
-                                <select :name="`ingredients[${index}][id]`"
+                                <select :name="`ingredients[${index}][id]`" x-model="row.id"
                                     class="w-full bg-white border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-amber-500"
                                     required>
                                     <option value="">-- Pilih Bahan --</option>
@@ -130,7 +140,7 @@
 
                             {{-- Input Jumlah --}}
                             <div class="col-span-4">
-                                <input type="number" :name="`ingredients[${index}][amount]`"
+                                <input type="number" :name="`ingredients[${index}][amount]`" x-model="row.amount"
                                     class="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm text-center focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-amber-500"
                                     placeholder="0" min="1" required>
                             </div>
@@ -156,8 +166,6 @@
                     <div>
                         <strong>Cara Kerja:</strong> Setiap kali menu ini dipesan pelanggan, stok bahan baku di atas
                         akan berkurang otomatis sesuai takaran yang Anda isi.
-                        <br><em class="text-blue-600">Contoh: Untuk Kopi Susu, masukkan "Biji Kopi" (18 gr) dan "Susu Cair"
-                            (150 ml).</em>
                     </div>
                 </div>
             </div>
@@ -169,8 +177,8 @@
                     Batal
                 </a>
                 <button type="submit"
-                    class="flex-1 bg-gray-900 text-white px-8 py-3 rounded-xl font-bold text-lg shadow-lg hover:bg-black transition flex items-center justify-center gap-2">
-                    💾 SIMPAN MENU
+                    class="flex-1 bg-amber-600 text-white px-8 py-3 rounded-xl font-bold text-lg shadow-lg shadow-amber-600/30 hover:bg-amber-700 transition flex items-center justify-center gap-2">
+                    ✨ UPDATE MENU
                 </button>
             </div>
         </div>
@@ -183,7 +191,11 @@
     <script>
         function recipeApp() {
             return {
-                rows: [{ id: '', amount: '' }],
+                // Pre-populate dengan data resep yang sudah ada
+                rows: @json($product->ingredients->map(fn($ing) => [
+                    'id' => (string) $ing->id,
+                    'amount' => (string) $ing->pivot->amount_needed
+                ])->values()),
 
                 addRow() {
                     this.rows.push({ id: '', amount: '' });

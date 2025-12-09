@@ -8,7 +8,17 @@ class Product extends Model
 {
     protected $guarded = [];
 
-    // Relasi: Produk punya banyak Bahan Baku (lewat tabel resep)
+    /**
+     * Relasi: Produk milik satu Kategori
+     */
+    public function category()
+    {
+        return $this->belongsTo(Category::class);
+    }
+
+    /**
+     * Relasi: Produk punya banyak Bahan Baku (lewat tabel resep)
+     */
     public function ingredients()
     {
         return $this->belongsToMany(Ingredient::class, 'product_ingredient')

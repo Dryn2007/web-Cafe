@@ -28,100 +28,147 @@
         </div>
     @endif
 
-    {{-- GRID PRODUK --}}
-    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-        @forelse($products as $product)
-            <div
-                class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden hover:shadow-lg transition-shadow duration-300 group flex flex-col h-full">
+    {{-- TAB KATEGORI --}}
+    <div x-data="{ activeTab: 'all' }" class="space-y-6">
+        {{-- Tab Navigation --}}
+        <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-2 flex flex-wrap gap-2">
+            <button @click="activeTab = 'all'"
+                :class="activeTab === 'all' ? 'bg-amber-600 text-white shadow-lg' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'"
+                class="px-4 py-2.5 rounded-xl font-bold text-sm transition flex items-center gap-2">
+                <span>📋</span> Semua
+                <span class="bg-white/20 px-2 py-0.5 rounded-lg text-xs">{{ $products->count() }}</span>
+            </button>
 
-                {{-- GAMBAR & HARGA --}}
-                <div class="h-48 bg-gray-100 relative overflow-hidden">
-                    @if($product->image)
-                        <img src="{{ asset('storage/' . $product->image) }}"
-                            class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500">
-                    @else
-                        <div class="w-full h-full flex flex-col items-center justify-center text-gray-300 bg-gray-50">
-                            <span class="text-4xl">☕</span>
-                            <span class="text-xs font-bold mt-2 uppercase tracking-wide">No Image</span>
+            @foreach($categories as $category)
+                <button @click="activeTab = '{{ $category->id }}'"
+                    :class="activeTab === '{{ $category->id }}' ? 'bg-amber-600 text-white shadow-lg' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'"
+                    class="px-4 py-2.5 rounded-xl font-bold text-sm transition flex items-center gap-2">
+                    <span>{{ $category->icon ?? '📁' }}</span> {{ $category->name }}
+                    <span
+                        class="bg-white/20 px-2 py-0.5 rounded-lg text-xs">{{ $products->where('category_id', $category->id)->count() }}</span>
+                </button>
+            @endforeach
+
+            <button @click="activeTab = 'uncategorized'"
+                :class="activeTab === 'uncategorized' ? 'bg-amber-600 text-white shadow-lg' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'"
+                class="px-4 py-2.5 rounded-xl font-bold text-sm transition flex items-center gap-2">
+                <span>📦</span> Tanpa Kategori
+                <span
+                    class="bg-white/20 px-2 py-0.5 rounded-lg text-xs">{{ $products->whereNull('category_id')->count() }}</span>
+            </button>
+        </div>
+
+        {{-- GRID PRODUK --}}
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+            @forelse($products as $product)
+                <div x-show="activeTab === 'all' || activeTab === '{{ $product->category_id ?? 'uncategorized' }}'"
+                    x-transition:enter="transition ease-out duration-200" x-transition:enter-start="opacity-0 scale-95"
+                    x-transition:enter-end="opacity-100 scale-100"
+                    class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden hover:shadow-lg transition-shadow duration-300 group flex flex-col h-full">
+
+                    {{-- GAMBAR & HARGA --}}
+                    <div class="h-48 bg-gray-100 relative overflow-hidden">
+                        @if($product->image)
+                            <img src="{{ asset('storage/' . $product->image) }}"
+                                class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500">
+                        @else
+                            <div class="w-full h-full flex flex-col items-center justify-center text-gray-300 bg-gray-50">
+                                <span class="text-4xl">☕</span>
+                                <span class="text-xs font-bold mt-2 uppercase tracking-wide">No Image</span>
+                            </div>
+                        @endif
+
+                        {{-- Badge Harga --}}
+                        <div
+                            class="absolute top-3 right-3 bg-white/90 backdrop-blur-sm px-3 py-1 rounded-full text-sm font-black text-amber-600 shadow-sm border border-amber-100">
+                            Rp {{ number_format($product->price, 0, ',', '.') }}
                         </div>
-                    @endif
-
-                    {{-- Badge Harga --}}
-                    <div
-                        class="absolute top-3 right-3 bg-white/90 backdrop-blur-sm px-3 py-1 rounded-full text-sm font-black text-amber-600 shadow-sm border border-amber-100">
-                        Rp {{ number_format($product->price, 0, ',', '.') }}
                     </div>
-                </div>
 
-                {{-- INFO PRODUK --}}
-                <div class="p-5 flex-1 flex flex-col">
-                    <h3 class="font-bold text-lg text-gray-900 mb-1 leading-tight">{{ $product->name }}</h3>
+                    {{-- INFO PRODUK --}}
+                    <div class="p-5 flex-1 flex flex-col">
+                        <div class="flex items-start justify-between gap-2">
+                            <h3 class="font-bold text-lg text-gray-900 leading-tight">{{ $product->name }}</h3>
+                        </div>
+                        @if($product->category)
+                            <span class="inline-flex items-center gap-1 text-xs text-gray-500 mt-1">
+                                <span>{{ $product->category->icon ?? '📁' }}</span>
+                                {{ $product->category->name }}
+                            </span>
+                        @else
+                            <span class="inline-flex items-center gap-1 text-xs text-gray-400 mt-1">
+                                <span>📦</span> Tanpa Kategori
+                            </span>
+                        @endif
 
-                    {{-- List Resep --}}
-                    <div class="mt-4 bg-gray-50 rounded-lg p-3 border border-gray-100 flex-1">
-                        <p class="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-2 flex items-center gap-1">
-                            <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                    d="M19.428 15.428a2 2 0 00-1.022-.547l-2.384-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z">
-                                </path>
-                            </svg>
-                            Komposisi Resep
-                        </p>
-                        <ul class="space-y-1.5">
-                            @foreach($product->ingredients as $ing)
-                                <li
-                                    class="flex justify-between text-xs text-gray-600 border-b border-gray-200 border-dashed pb-1 last:border-0 last:pb-0">
-                                    <span>{{ $ing->name }}</span>
-                                    <span class="font-mono font-bold text-gray-800">{{ $ing->pivot->amount_needed }}
-                                        {{ $ing->unit }}</span>
-                                </li>
-                            @endforeach
-                        </ul>
+                        {{-- List Resep --}}
+                        <div class="mt-4 bg-gray-50 rounded-lg p-3 border border-gray-100 flex-1">
+                            <p
+                                class="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-2 flex items-center gap-1">
+                                <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M19.428 15.428a2 2 0 00-1.022-.547l-2.384-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z">
+                                    </path>
+                                </svg>
+                                Komposisi Resep
+                            </p>
+                            <ul class="space-y-1.5">
+                                @foreach($product->ingredients as $ing)
+                                    <li
+                                        class="flex justify-between text-xs text-gray-600 border-b border-gray-200 border-dashed pb-1 last:border-0 last:pb-0">
+                                        <span>{{ $ing->name }}</span>
+                                        <span class="font-mono font-bold text-gray-800">{{ $ing->pivot->amount_needed }}
+                                            {{ $ing->unit }}</span>
+                                    </li>
+                                @endforeach
+                            </ul>
+                        </div>
                     </div>
-                </div>
 
-                {{-- FOOTER CARD (HAPUS/EDIT) --}}
-                <div class="px-5 py-3 border-t border-gray-100 bg-gray-50 flex justify-end gap-2">
-                    {{-- Edit (Placeholder link) --}}
-                    <button class="p-2 text-gray-400 hover:text-blue-600 transition" title="Edit Menu">
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z">
-                            </path>
-                        </svg>
-                    </button>
-
-                    {{-- Delete Action --}}
-                    {{-- Note: Pastikan route destroy ada jika ingin fitur ini aktif --}}
-                    {{-- <form action="{{ route('admin.products.destroy', $product->id) }}" method="POST"
-                        onsubmit="return confirm('Hapus menu ini?');">
-                        @csrf @method('DELETE') --}}
-                        <button class="p-2 text-gray-400 hover:text-red-600 transition" title="Hapus Menu"
-                            onclick="alert('Fitur hapus belum diaktifkan di route')">
+                    {{-- FOOTER CARD (HAPUS/EDIT) --}}
+                    <div class="px-5 py-3 border-t border-gray-100 bg-gray-50 flex justify-end gap-2">
+                        {{-- Edit --}}
+                        <a href="{{ route('admin.products.edit', $product->id) }}"
+                            class="p-2 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition"
+                            title="Edit Menu">
                             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                    d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16">
+                                    d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z">
                                 </path>
                             </svg>
-                        </button>
-                        {{--
-                    </form> --}}
+                        </a>
+
+                        {{-- Delete Action --}}
+                        <form action="{{ route('admin.products.destroy', $product->id) }}" method="POST"
+                            onsubmit="return confirm('Hapus menu {{ $product->name }}?');" class="inline">
+                            @csrf @method('DELETE')
+                            <button type="submit"
+                                class="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition"
+                                title="Hapus Menu">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16">
+                                    </path>
+                                </svg>
+                            </button>
+                        </form>
+                    </div>
                 </div>
-            </div>
-        @empty
-            {{-- EMPTY STATE --}}
-            <div class="col-span-full flex flex-col items-center justify-center py-16 text-center">
-                <div class="bg-gray-100 p-6 rounded-full mb-4">
-                    <span class="text-6xl">📋</span>
+            @empty
+                {{-- EMPTY STATE --}}
+                <div class="col-span-full flex flex-col items-center justify-center py-16 text-center">
+                    <div class="bg-gray-100 p-6 rounded-full mb-4">
+                        <span class="text-6xl">📋</span>
+                    </div>
+                    <h3 class="text-xl font-bold text-gray-800">Belum Ada Menu</h3>
+                    <p class="text-gray-500 mb-6">Mulai racik menu kafe pertamamu sekarang.</p>
+                    <a href="{{ route('admin.products.create') }}"
+                        class="bg-amber-600 text-white px-6 py-3 rounded-xl font-bold shadow hover:bg-amber-700">
+                        + Buat Menu Pertama
+                    </a>
                 </div>
-                <h3 class="text-xl font-bold text-gray-800">Belum Ada Menu</h3>
-                <p class="text-gray-500 mb-6">Mulai racik menu kafe pertamamu sekarang.</p>
-                <a href="{{ route('admin.products.create') }}"
-                    class="bg-amber-600 text-white px-6 py-3 rounded-xl font-bold shadow hover:bg-amber-700">
-                    + Buat Menu Pertama
-                </a>
-            </div>
-        @endforelse
+            @endforelse
+        </div>
     </div>
 
 @endsection

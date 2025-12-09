@@ -8,13 +8,15 @@ use Illuminate\Support\Facades\Auth;
 use Carbon\Carbon;
 use App\Models\Product;
 use App\Models\Order;
+use App\Models\Category;
 
 class OrderController extends Controller
 {
     public function index()
     {
-        $products = Product::where('is_available', true)->get();
-        return view('order.index', compact('products'));
+        $products = Product::with('category')->where('is_available', true)->get();
+        $categories = Category::orderBy('sort_order')->orderBy('name')->get();
+        return view('order.index', compact('products', 'categories'));
     }
 
     // UPDATE: Store dengan Auth & Payment Method

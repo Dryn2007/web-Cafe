@@ -3,7 +3,7 @@
 @section('title', 'Menu - Kopiku')
 
 @section('content')
-    <div class="max-w-3xl mx-auto px-4 py-6 pb-32">
+    <div class="max-w-3xl mx-auto px-4 py-6 pb-32" x-data="{ activeCategory: 'all' }">
 
         {{-- Hero Banner --}}
         <div
@@ -20,29 +20,36 @@
             <div class="absolute right-4 bottom-4 text-6xl opacity-20">☕</div>
         </div>
 
-        {{-- Category Pills (Optional for future) --}}
+        {{-- Category Pills --}}
         <div class="flex gap-2 mb-6 overflow-x-auto pb-2 scrollbar-hide">
-            <button class="px-4 py-2 bg-gray-900 text-white rounded-full text-sm font-bold whitespace-nowrap shadow-lg">
-                🍵 Semua Menu
+            <button @click="activeCategory = 'all'"
+                :class="activeCategory === 'all' ? 'bg-gray-900 text-white shadow-lg' : 'bg-white text-gray-600 border border-gray-200 hover:bg-gray-50'"
+                class="px-4 py-2 rounded-full text-sm font-bold whitespace-nowrap transition">
+                🍵 Semua
             </button>
-            <button
-                class="px-4 py-2 bg-white text-gray-600 rounded-full text-sm font-medium whitespace-nowrap border border-gray-200 hover:bg-gray-50 transition">
-                ☕ Kopi
-            </button>
-            <button
-                class="px-4 py-2 bg-white text-gray-600 rounded-full text-sm font-medium whitespace-nowrap border border-gray-200 hover:bg-gray-50 transition">
-                🧋 Non-Kopi
-            </button>
-            <button
-                class="px-4 py-2 bg-white text-gray-600 rounded-full text-sm font-medium whitespace-nowrap border border-gray-200 hover:bg-gray-50 transition">
-                🍰 Snack
-            </button>
+            @foreach($categories as $category)
+                <button @click="activeCategory = '{{ $category->id }}'"
+                    :class="activeCategory === '{{ $category->id }}' ? 'bg-gray-900 text-white shadow-lg' : 'bg-white text-gray-600 border border-gray-200 hover:bg-gray-50'"
+                    class="px-4 py-2 rounded-full text-sm font-bold whitespace-nowrap transition">
+                    {{ $category->icon ?? '📁' }} {{ $category->name }}
+                </button>
+            @endforeach
+            @if($products->whereNull('category_id')->count() > 0)
+                <button @click="activeCategory = 'uncategorized'"
+                    :class="activeCategory === 'uncategorized' ? 'bg-gray-900 text-white shadow-lg' : 'bg-white text-gray-600 border border-gray-200 hover:bg-gray-50'"
+                    class="px-4 py-2 rounded-full text-sm font-bold whitespace-nowrap transition">
+                    📦 Lainnya
+                </button>
+            @endif
         </div>
 
         {{-- Grid Produk --}}
         <div class="grid grid-cols-2 sm:grid-cols-3 gap-4">
             @foreach($products as $product)
-                <div class="group bg-white rounded-3xl shadow-sm border border-gray-100 overflow-hidden flex flex-col hover:shadow-xl hover:shadow-orange-100 hover:-translate-y-1 transition-all duration-300"
+                <div x-show="activeCategory === 'all' || activeCategory === '{{ $product->category_id ?? 'uncategorized' }}'"
+                    x-transition:enter="transition ease-out duration-200" x-transition:enter-start="opacity-0 scale-95"
+                    x-transition:enter-end="opacity-100 scale-100"
+                    class="group bg-white rounded-3xl shadow-sm border border-gray-100 overflow-hidden flex flex-col hover:shadow-xl hover:shadow-orange-100 hover:-translate-y-1 transition-all duration-300"
                     x-data="{ added: false }">
 
                     {{-- Image --}}
@@ -72,12 +79,12 @@
 
                         {{-- Add Button --}}
                         <button @click="
-                                        let item = cart.find(i => i.id === {{ $product->id }});
-                                        if(item) { item.qty++; } 
-                                        else { cart.push({ id: {{ $product->id }}, name: '{{ $product->name }}', price: {{ $product->price }}, qty: 1 }); }
-                                        added = true;
-                                        setTimeout(() => added = false, 1000);
-                                    "
+                                                let item = cart.find(i => i.id === {{ $product->id }});
+                                                if(item) { item.qty++; } 
+                                                else { cart.push({ id: {{ $product->id }}, name: '{{ $product->name }}', price: {{ $product->price }}, qty: 1 }); }
+                                                added = true;
+                                                setTimeout(() => added = false, 1000);
+                                            "
                             class="mt-3 w-full py-2.5 rounded-xl font-bold text-sm transition-all duration-200 flex items-center justify-center gap-1"
                             :class="added ? 'bg-green-500 text-white scale-95' : 'bg-gray-900 text-white hover:bg-orange-500 active:scale-95'">
                             <span x-show="!added">TAMBAH +</span>
