@@ -94,10 +94,10 @@
                         @endif
 
                         {{-- Price Badge --}}
-                        <div class="absolute top-2 right-2 bg-white/90 backdrop-blur-sm px-2.5 py-1 rounded-full shadow-sm">
+                        {{-- <div class="absolute top-2 right-2 bg-white/90 backdrop-blur-sm px-2.5 py-1 rounded-full shadow-sm">
                             <span class="text-xs font-bold text-orange-600">Rp
                                 {{ number_format($product->price / 1000, 0) }}K</span>
-                        </div>
+                        </div> --}}
 
                         {{-- Sold Out Overlay --}}
                         @if(!$isAvailable)
