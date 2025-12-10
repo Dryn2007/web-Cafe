@@ -37,9 +37,32 @@
                         <div class="flex-1 min-w-0">
                             <p class="font-semibold text-gray-800 truncate" x-text="item.name"></p>
                             <div class="flex items-center gap-2 mt-1">
-                                <span class="text-xs font-bold text-orange-500 bg-orange-50 px-2 py-0.5 rounded-full"
-                                    x-text="item.qty + 'x'"></span>
+                                {{-- Qty Controls --}}
+                                <div class="flex items-center bg-gray-100 rounded-full">
+                                    <button @click="decreaseQty(index)"
+                                        class="w-7 h-7 flex items-center justify-center text-gray-600 hover:bg-gray-200 rounded-full transition">
+                                        <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3"
+                                                d="M20 12H4"></path>
+                                        </svg>
+                                    </button>
+                                    <span class="px-2 text-sm font-bold text-gray-800 min-w-[24px] text-center"
+                                        x-text="item.qty"></span>
+                                    <button @click="increaseQty(index)"
+                                        class="w-7 h-7 flex items-center justify-center text-gray-600 hover:bg-gray-200 rounded-full transition"
+                                        :class="item.qty >= (item.maxStock || 999) ? 'opacity-50 cursor-not-allowed' : ''">
+                                        <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3"
+                                                d="M12 4v16m8-8H4"></path>
+                                        </svg>
+                                    </button>
+                                </div>
+                                <span class="text-xs text-gray-400">×</span>
                                 <span class="text-xs text-gray-400" x-text="formatRupiah(item.price)"></span>
+                                <template x-if="item.maxStock && item.maxStock <= 10">
+                                    <span class="text-xs text-amber-600 font-bold"
+                                        x-text="'(max: ' + item.maxStock + ')'"></span>
+                                </template>
                             </div>
                         </div>
                         <p class="font-bold text-gray-900" x-text="formatRupiah(item.price * item.qty)"></p>
@@ -217,6 +240,52 @@
                         if (this.cart.length === 0) window.location.href = "{{ route('order.index') }}";
                     },
 
+                    increaseQty(index) {
+                        let item = this.cart[index];
+                        let maxStock = item.maxStock || 999;
+
+                        if (item.qty >= maxStock) {
+                            Swal.fire({
+                                icon: 'warning',
+                                title: 'Stok Terbatas! 😅',
+                                text: 'Maksimal ' + maxStock + ' untuk ' + item.name,
+                                confirmButtonColor: '#f97316',
+                                confirmButtonText: 'Oke, Mengerti'
+                            });
+                            return;
+                        }
+                        item.qty++;
+                    },
+
+                    decreaseQty(index) {
+                        let item = this.cart[index];
+                        if (item.qty > 1) {
+                            item.qty--;
+                        } else {
+                            Swal.fire({
+                                title: 'Hapus item ini?',
+                                text: item.name + ' akan dihapus dari keranjang',
+                                icon: 'question',
+                                showCancelButton: true,
+                                confirmButtonColor: '#ef4444',
+                                cancelButtonColor: '#6b7280',
+                                confirmButtonText: 'Ya, Hapus!',
+                                cancelButtonText: 'Batal'
+                            }).then((result) => {
+                                if (result.isConfirmed) {
+                                    this.removeFromCart(index);
+                                    Swal.fire({
+                                        icon: 'success',
+                                        title: 'Dihapus!',
+                                        text: 'Item berhasil dihapus dari keranjang',
+                                        timer: 1500,
+                                        showConfirmButton: false
+                                    });
+                                }
+                            });
+                        }
+                    },
+
                     handleMainButton() {
                         if (!this.paymentMethod) return;
 
@@ -232,11 +301,27 @@
                         @else
                             this.submitOrder();
                         @endif
-                            },
+                                    },
 
                     validateWallet() {
-                        if (this.walletPhone.length < 8) return alert("Nomor HP tidak valid!");
-                        if (this.walletPin.length !== 6) return alert("PIN harus 6 digit!");
+                        if (this.walletPhone.length < 8) {
+                            Swal.fire({
+                                icon: 'error',
+                                title: 'Oops!',
+                                text: 'Nomor HP tidak valid!',
+                                confirmButtonColor: '#f97316'
+                            });
+                            return;
+                        }
+                        if (this.walletPin.length !== 6) {
+                            Swal.fire({
+                                icon: 'error',
+                                title: 'Oops!',
+                                text: 'PIN harus 6 digit!',
+                                confirmButtonColor: '#f97316'
+                            });
+                            return;
+                        }
                         this.submitOrder();
                     },
 
@@ -263,12 +348,23 @@
                                 this.cart = [];
                                 window.location.href = result.redirect_url;
                             } else {
-                                alert("Gagal: " + result.message);
+                                Swal.fire({
+                                    icon: 'error',
+                                    title: 'Gagal! 😔',
+                                    text: result.message,
+                                    confirmButtonColor: '#f97316',
+                                    confirmButtonText: 'Coba Lagi'
+                                });
                                 this.loading = false;
                             }
                         } catch (err) {
                             console.error(err);
-                            alert("Terjadi kesalahan koneksi");
+                            Swal.fire({
+                                icon: 'error',
+                                title: 'Koneksi Bermasalah',
+                                text: 'Terjadi kesalahan koneksi. Silakan coba lagi.',
+                                confirmButtonColor: '#f97316'
+                            });
                             this.loading = false;
                         }
                     }

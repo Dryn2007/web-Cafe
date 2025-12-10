@@ -14,7 +14,7 @@ class OrderController extends Controller
 {
     public function index()
     {
-        $products = Product::with('category')->where('is_available', true)->get();
+        $products = Product::with(['category', 'ingredients'])->where('is_available', true)->get();
         $categories = Category::orderBy('sort_order')->orderBy('name')->get();
         return view('order.index', compact('products', 'categories'));
     }
@@ -40,10 +40,19 @@ class OrderController extends Controller
                 // 1. Cek Stok & Hitung Total
                 foreach ($cartItems as $item) {
                     $product = Product::with('ingredients')->find($item['id']);
+
+                    // Cek apakah produk masih tersedia
+                    if (!$product || !$product->is_available) {
+                        $productName = $product ? $product->name : 'tidak ditemukan';
+                        throw new \Exception("Produk " . $productName . " sudah tidak tersedia!");
+                    }
+
+                    // Cek stok bahan baku
                     foreach ($product->ingredients as $ingredient) {
                         $totalNeeded = $ingredient->pivot->amount_needed * $item['qty'];
                         if ($ingredient->stock < $totalNeeded) {
-                            throw new \Exception("Stok {$ingredient->name} habis!");
+                            $shortage = $totalNeeded - $ingredient->stock;
+                            throw new \Exception("Stok " . $ingredient->name . " tidak cukup untuk membuat " . $item['qty'] . " " . $product->name . ". Kurang " . $shortage . " " . $ingredient->unit . ".");
                         }
                     }
                     $totalPrice += $product->price * $item['qty'];
