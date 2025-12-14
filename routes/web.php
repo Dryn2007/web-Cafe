@@ -16,6 +16,14 @@ use App\Http\Controllers\Admin\FinanceController;
 // Halaman Menu (Katalog)
 Route::get('/', [OrderController::class, 'index'])->name('order.index');
 
+// Dashboard Route - Redirect berdasarkan role
+Route::middleware(['auth'])->get('/dashboard', function () {
+    if (auth()->user()->role === 'admin') {
+        return redirect()->route('admin.dashboard');
+    }
+    return redirect()->route('order.index');
+})->name('dashboard');
+
 
 // ==========================================
 // 2. ZONA MEMBER / USER (Harus Login & Role = user)
